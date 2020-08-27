@@ -1,8 +1,5 @@
-#use Flask to render a template
 from flask import Flask, render_template
-#use PyMongo to interact with our Mongo database
 from flask_pymongo import PyMongo
-#use the scraping code, convert from Jupyter notebook to Python
 import scraping
 
 #setup Flask
