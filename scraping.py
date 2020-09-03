@@ -11,6 +11,7 @@ def scrape_all():
 
     #This line of code tells Python that we'll be using our mars_news function to pull this data
     news_title, news_paragraph = mars_news(browser)
+    hemisphere_image_urls = mars_hemispheres(browser)
 
    # Run all scraping functions and store results in dictionary
     data = {
@@ -18,7 +19,8 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        "mars_hemispheres": hemisphere_image_urls
     }
  # Stop webdriver and return data
     browser.quit()
@@ -100,6 +102,52 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+
+def mars_hemispheres(browser):
+    # 1. Use browser to visit the URL 
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    for i in range(1,5): 
+
+        #create empty dictonary to store scraped information
+        hemispheres = {}
+
+        #define xpath
+        xpath = '/html/body/div[1]/div[1]/div[2]/section/div/div[2]'
+        
+        # Scrape the image title
+        title = browser.find_by_xpath(f'{xpath}/div[{i}]/div/a/h3').value  
+        
+        #Find image thumbnail and click it
+        thumbnail = browser.find_by_xpath(f'{xpath}/div[{i}]/a/img')
+        thumbnail.click()
+
+        # Find the relative image url
+        html = browser.html
+        img_soup = soup(html, 'html.parser')
+    
+        # Find the relative image url
+        img_url_rel = img_soup.select_one('img.wide-image').get("src")
+        # Create the complete url to the image
+        img_url = f'https://astrogeology.usgs.gov{img_url_rel}'
+        
+        # Add image url and image title to hemispheres dictionary 
+        hemispheres.update({'img_url':img_url,'title':title})
+        
+        # Append the list to add dictionary
+        hemisphere_image_urls.append(hemispheres)
+        
+        #return to previous page to begin next cycle of loop
+        browser.visit(url)
+
+    return hemisphere_image_urls
+
 
 #This last block of code tells Flask that our script is complete and ready for action
 if __name__ == "__main__":
